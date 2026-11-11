@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f6f2">
+  <title>BlackPlo AI</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #24251f;
+      background: #f7f6f2;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --muted: #77786f;
+      --line: #e8e7e0;
+      --green: #526b50;
+      --green-dark: #40563e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { margin: 0; min-height: 100vh; }
+
+    button, textarea { font: inherit; }
+
+    .app { display: flex; min-height: 100vh; }
+
+    .sidebar {
+      display: flex;
+      flex: 0 0 258px;
+      flex-direction: column;
+      padding: 26px 18px;
+      border-right: 1px solid var(--line);
+      background: #f1f0eb;
+    }
+
+    .brand { display: flex; align-items: center; gap: 11px; margin: 0 0 34px 5px; }
+    .brand-mark {
+      display: grid;
+      width: 36px;
+      height: 36px;
+      place-items: center;
+      border-radius: 12px;
+      background: var(--green);
+      color: white;
+      font-size: 19px;
+      font-weight: 700;
+    }
+    .brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.4px; }
+    .brand-caption { margin-top: 2px; color: var(--muted); font-size: 11px; }
+
+    .new-chat {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      min-height: 43px;
+      border: 1px solid #dcdcd3;
+      border-radius: 11px;
+      background: #fff;
+      color: #34372f;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .new-chat:hover { border-color: #b7c1b2; background: #fbfcf9; }
+    .sidebar-note { margin: auto 5px 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+
+    .main { display: flex; flex: 1; min-width: 0; flex-direction: column; }
+    .topbar {
+      display: flex;
+      height: 66px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 34px;
+      border-bottom: 1px solid var(--line);
+      background: rgb(255 255 255 / 55%);
+    }
+    .topbar-title { font-size: 14px; font-weight: 600; }
+    .status { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; }
+    .status-dot { width: 8px; height: 8px; border-radius: 50%; background: #7da477; }
+
+    .conversation {
+      display: flex;
+      width: min(100%, 840px);
+      flex: 1;
+      flex-direction: column;
+      align-self: center;
+      padding: 44px 28px 20px;
+    }
+    .messages { display: flex; flex: 1; flex-direction: column; gap: 22px; }
+    .welcome { margin: auto auto 28px; text-align: center; }
+    .welcome-icon {
+      display: grid;
+      width: 54px;
+      height: 54px;
+      margin: 0 auto 18px;
+      place-items: center;
+      border: 1px solid #e4e6dc;
+      border-radius: 18px;
+      background: #eef1e9;
+      color: var(--green);
+      font-size: 25px;
+    }
+    .welcome h1 { margin: 0; font-size: clamp(26px, 4vw, 34px); letter-spacing: -1.1px; }
+    .welcome p { margin: 10px 0 0; color: var(--muted); font-size: 15px; }
+
+    .suggestions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .suggestion {
+      padding: 14px 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fff;
+      color: #4a4b43;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color .15s, transform .15s;
+    }
+    .suggestion:hover { transform: translateY(-1px); border-color: #b9c5b4; }
+    .suggestion strong { display: block; margin-bottom: 4px; color: #30322c; font-size: 13px; }
+    .suggestion span { color: var(--muted); font-size: 12px; }
+
+    .message { display: flex; align-items: flex-start; gap: 12px; }
+    .avatar {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      flex: 0 0 30px;
+      place-items: center;
+      border-radius: 10px;
+      background: #e9eee5;
+      color: var(--green-dark);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .message.user .avatar { background: #e9e7df; color: #66675f; }
+    .message-body { min-width: 0; padding-top: 4px; }
+    .message-name { margin-bottom: 6px; color: #66675f; font-size: 12px; font-weight: 600; }
+    .message-text { color: #34352f; font-size: 14px; line-height: 1.7; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .message.user .message-text { color: #252620; }
+    .typing { display: inline-flex; gap: 4px; padding: 7px 0; }
+    .typing span { width: 6px; height: 6px; border-radius: 50%; background: #90978b; animation: pulse 1s infinite ease-in-out; }
+    .typing span:nth-child(2) { animation-delay: .15s; }
+    .typing span:nth-child(3) { animation-delay: .3s; }
+    @keyframes pulse { 50% { opacity: .3; transform: translateY(-3px); } }
+
+    .composer-wrap { position: sticky; bottom: 0; padding-top: 18px; background: linear-gradient(transparent, #f7f6f2 18px); }
+    .composer {
+      display: flex;
+      align-items: flex-end;
+      gap: 12px;
+      padding: 12px 12px 12px 17px;
+      border: 1px solid #dfded7;
+      border-radius: 16px;
+      background: #fff;
+      box-shadow: 0 8px 26px rgb(52 54 44 / 5%);
+    }
+    .composer:focus-within { border-color: #a8b7a2; box-shadow: 0 0 0 3px rgb(82 107 80 / 9%); }
+    textarea {
+      width: 100%;
+      min-height: 29px;
+      max-height: 160px;
+      resize: none;
+      border: 0;
+      outline: 0;
+      color: #292a24;
+      line-height: 1.55;
+    }
+    textarea::placeholder { color: #999a91; }
+    .send {
+      display: grid;
+      width: 38px;
+      height: 38px;
+      flex: 0 0 38px;
+      place-items: center;
+      border: 0;
+      border-radius: 11px;
+      background: var(--green);
+      color: #fff;
+      cursor: pointer;
+      font-size: 18px;
+      transition: background .15s, opacity .15s;
+    }
+    .send:hover { background: var(--green-dark); }
+    .send:disabled { cursor: not-allowed; opacity: .5; }
+    .hint { margin: 10px 0 0; color: #92938a; font-size: 11px; text-align: center; }
+    .error { color: #a23c32; }
+
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      .topbar { height: 58px; padding: 0 18px; }
+      .conversation { padding: 28px 17px 15px; }
+      .welcome { margin-bottom: 20px; }
+      .suggestions { grid-template-columns: 1fr; }
+      .suggestion { padding: 12px 14px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Chat options">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">✦</div>
+        <div><div class="brand-name">BlackPlo AI</div><div class="brand-caption">A little help goes a long way</div></div>
+      </div>
+      <button class="new-chat" id="new-chat" type="button"><span aria-hidden="true">＋</span> New conversation</button>
+      <p class="sidebar-note">Your conversation stays in this browser. Start a new chat anytime to clear it.</p>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-title">Assistant</div>
+        <div class="status"><span class="status-dot" aria-hidden="true"></span> Ready to help</div>
+      </header>
+
+      <section class="conversation" aria-label="Conversation">
+        <div class="messages" id="messages" aria-live="polite">
+          <div class="welcome" id="welcome">
+            <div class="welcome-icon" aria-hidden="true">✦</div>
+            <h1>What’s on your mind?</h1>
+            <p>Ask a question, explore an idea, or get help with something you’re working on.</p>
+          </div>
+          <div class="suggestions" id="suggestions">
+            <button class="suggestion" type="button" data-prompt="Help me plan my day"><strong>Plan my day</strong><span>Make a simple, realistic schedule</span></button>
+            <button class="suggestion" type="button" data-prompt="Explain a tricky topic in simple terms"><strong>Explain something</strong><span>Break a tricky topic into simple steps</span></button>
+            <button class="suggestion" type="button" data-prompt="Help me write a friendly email"><strong>Write with me</strong><span>Draft or polish a message</span></button>
+            <button class="suggestion" type="button" data-prompt="Give me a few creative ideas for a weekend"><strong>Brainstorm ideas</strong><span>Find a fresh place to start</span></button>
+          </div>
+        </div>
+
+        <div class="composer-wrap">
+          <form class="composer" id="chat-form">
+            <textarea id="message-input" rows="1" maxlength="4000" aria-label="Message" placeholder="Message BlackPlo AI..."></textarea>
+            <button class="send" id="send-button" type="submit" aria-label="Send message">↑</button>
+          </form>
+          <p class="hint">Enter to send · Shift + Enter for a new line</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const form = document.querySelector("#chat-form");
+    const input = document.querySelector("#message-input");
+    const sendButton = document.querySelector("#send-button");
+    const messages = document.querySelector("#messages");
+    const welcome = document.querySelector("#welcome");
+    const suggestions = document.querySelector("#suggestions");
+    const newChatButton = document.querySelector("#new-chat");
+    const storageKey = "pluto-chat-messages";
+    let history = [];
+
+    function saveHistory() {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(history));
+      } catch {
+        // The current conversation remains usable when browser storage is unavailable.
+      }
+    }
+
+    function addMessage(role, content) {
+      const article = document.createElement("article");
+      article.className = `message ${role}`;
+
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      avatar.setAttribute("aria-hidden", "true");
+      avatar.textContent = role === "user" ? "You" : "✦";
+
+      const body = document.createElement("div");
+      body.className = "message-body";
+      const name = document.createElement("div");
+      name.className = "message-name";
+      name.textContent = role === "user" ? "You" : "BlackPlo AI";
+      const text = document.createElement("div");
+      text.className = "message-text";
+      text.textContent = content;
+
+      body.append(name, text);
+      article.append(avatar, body);
+      messages.append(article);
+      return article;
+    }
+
+    function showTyping() {
+      const article = addMessage("assistant", "");
+      const text = article.querySelector(".message-text");
+      text.setAttribute("aria-label", "BlackPlo AI is thinking");
+      const dots = document.createElement("span");
+      dots.className = "typing";
+      dots.innerHTML = "<span></span><span></span><span></span>";
+      text.append(dots);
+      messages.scrollTop = messages.scrollHeight;
+      return article;
+    }
+
+    function fitInput() {
+      input.style.height = "auto";
+      input.style.height = `${Math.min(input.scrollHeight, 160)}px`;
+    }
+
+    async function sendMessage(message) {
+      const text = message.trim();
+      if (!text || sendButton.disabled) return;
+
+      welcome.hidden = true;
+      suggestions.hidden = true;
+      addMessage("user", text);
+      const priorHistory = history.slice(-12);
+      history.push({ role: "user", content: text });
+      saveHistory();
+      input.value = "";
+      fitInput();
+      sendButton.disabled = true;
+      const typing = showTyping();
+
+      try {
+        const response = await fetch("/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: text, history: priorHistory })
+        });
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            typeof errorData.detail === "string"
+              ? errorData.detail
+              : "The assistant couldn’t reply just now. Please try again."
+          );
+        }
+        const data = await response.json();
+        if (typeof data.reply !== "string" || !data.reply.trim()) {
+          throw new Error("The assistant returned an empty reply. Please try again.");
+        }
+        typing.querySelector(".message-text").textContent = data.reply;
+        history.push({ role: "assistant", content: data.reply });
+        saveHistory();
+      } catch (error) {
+        typing.remove();
+        const errorMessage = error instanceof TypeError
+          ? "I couldn’t reach the assistant. Check that the server is running, then try again."
+          : error.message;
+        const notice = addMessage("assistant", errorMessage);
+        notice.querySelector(".message-text").classList.add("error");
+      } finally {
+        sendButton.disabled = false;
+        input.focus();
+        messages.scrollTop = messages.scrollHeight;
+      }
+    }
+
+    function restoreHistory() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || "[]");
+        if (!Array.isArray(saved)) return;
+        history = saved.filter(item =>
+          item &&
+          (item.role === "user" || item.role === "assistant") &&
+          typeof item.content === "string"
+        ).slice(-40);
+        if (history.length) {
+          welcome.hidden = true;
+          suggestions.hidden = true;
+          for (const item of history) addMessage(item.role, item.content);
+        }
+      } catch {
+        history = [];
+      }
+    }
+
+    form.addEventListener("submit", event => {
+      event.preventDefault();
+      sendMessage(input.value);
+    });
+    input.addEventListener("input", fitInput);
+    input.addEventListener("keydown", event => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        form.requestSubmit();
+      }
+    });
+    suggestions.addEventListener("click", event => {
+      const button = event.target.closest("[data-prompt]");
+      if (button) sendMessage(button.dataset.prompt);
+    });
+    newChatButton.addEventListener("click", () => {
+      history = [];
+      saveHistory();
+      messages.querySelectorAll(".message").forEach(message => message.remove());
+      welcome.hidden = false;
+      suggestions.hidden = false;
+      input.focus();
+    });
+
+    restoreHistory();
+  </script>
+</body>
+</html>
